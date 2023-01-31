@@ -12,7 +12,11 @@ class DraggableContainer extends StatefulWidget {
 
 class _DraggableContainerState extends State<DraggableContainer> {
   var _hover = false;
-  Offset? _mouseDownPosition;
+  var _dragging = false;
+  //可拖动组件在鼠标按下时候的左上角位置.
+  Offset? _childPosWhenMouseDown;
+  //鼠标光标在按下时候的位置.
+  Offset? _cursorPosWhenMouseDown;
 
   Offset btnPos = Offset(50, 50);
   var _log = "";
@@ -31,6 +35,7 @@ class _DraggableContainerState extends State<DraggableContainer> {
           setState(() {
             var bound = context.globalPaintBounds;
             Rect rect = Rect.zero;
+            var path = Path();
             if(bound!= null)
               {
                 rect = Rect.fromLTRB(bound.left+btnPos.dx, bound.top + btnPos.dy
@@ -52,41 +57,83 @@ class _DraggableContainerState extends State<DraggableContainer> {
         },
         onExit: (e) {
           setState(() {
+            // _childPosWhenMouseDown = null;
+            // _cursorPosWhenMouseDown = null;
             _hover = false;
+            _dragging = false;
             _log = '离开了';
           });
         },
         child: Listener(
           onPointerDown: (e) {
             var bound = context.globalPaintBounds;
-            setState(() {
-              _mouseDownPosition = e.position;
-              _log = '点下呢,鼠标点$_mouseDownPosition 当前组件的位置:$bound';
-            });
-
-            // var bound = context.globalPaintBounds;
-            // var isIn = bound?.contains(e.position);
-            // print('点击:$isIn');
+            if(_hover && _childPosWhenMouseDown == null && _cursorPosWhenMouseDown == null && bound!= null)
+              {
+                Rect rect = Rect.zero;
+                rect = Rect.fromLTRB(bound.left+btnPos.dx, bound.top + btnPos.dy
+                    , bound.left + btnPos.dx + 40, bound.top + btnPos.dy + 40);
+                if(rect.contains(e.position)
+                )
+                {
+                  _hover = true;
+                  _dragging = true;
+                  setState(() {
+                    _childPosWhenMouseDown = btnPos;
+                    _cursorPosWhenMouseDown = e.position;
+                    print('按下按钮时的控件位置:$_childPosWhenMouseDown');
+                  });
+                }
+              }
           },
+          //这个move只有在按下时候才会触发.
           onPointerMove: (e) {
-            double moveX = 0;
-            double moveY = 0;
-            if (_mouseDownPosition != null) {
-              moveX = e.position.dx - _mouseDownPosition!.dx;
-              moveY = e.position.dy - _mouseDownPosition!.dy;
-            } else {
-              setState(() {
-                _mouseDownPosition = null;
-                _log = '移动出问题呢';
-              });
-              return;
-            }
-            btnPos = Offset(moveX, moveY);
+            if(_cursorPosWhenMouseDown == null || _childPosWhenMouseDown == null)
+              {
+                return;
+              }
+            var containerBound = context.globalPaintBounds;
+            //e是给的鼠标光标位置,计算他距离按下的时候走了多远.
+            var movedX = e.position.dx - _cursorPosWhenMouseDown!.dx;
+            var movedY = e.position.dy - _cursorPosWhenMouseDown!.dy;
+            //根据位移量,重新计算可移动组件的新位置.
+            var newX = _childPosWhenMouseDown!.dx + movedX;
+            var newY = _childPosWhenMouseDown!.dy + movedY;
+            //修正新位置,如果超出了的话 就把他归位
+            if(newX<0)
+              {
+                newX  = 0;
+              }
+            if(containerBound!= null)
+              {
+                if(newX>containerBound.width-40)
+                  {
+                    newX = containerBound.width-40;
+                  }
+              }
+            if(newY <0 )
+              {
+                newY = 0;
+              }
+            if(containerBound!= null)
+              {
+                if(newY >containerBound.height-40)
+                  {
+                    newY = containerBound.height -40;
+                  }
+              }
+            var newBtnPos = Offset(
+                newX,
+                newY);
+            setState(() {
+              btnPos = newBtnPos;
+            });
           },
           onPointerUp: (e) {
             setState(() {
-              _mouseDownPosition = null;
+              _childPosWhenMouseDown = null;
+              _cursorPosWhenMouseDown = null;
               _log = '抬起呢';
+              _dragging = false;
             });
           },
           child: Stack(
@@ -158,7 +205,12 @@ class _DraggableContainerState extends State<DraggableContainer> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                      color: _hover ? Colors.deepOrange : Colors.cyan),
+                      color:
+                      _dragging? Colors.purple:
+                      _hover ? Colors.deepOrange : Colors.cyan),
+                      child: FloatingActionButton(onPressed: () {  },
+                        child: Text('ddd'),
+                      ),
                 ),
                 // ),
                 // )
