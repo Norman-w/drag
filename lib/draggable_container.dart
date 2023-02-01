@@ -2,6 +2,7 @@ import 'package:drag/widget.dart';
 import 'package:flutter/material.dart';
 
 import 'draggable_element.dart';
+import 'polygon_helper.dart';
 
 class DraggableContainer extends StatefulWidget {
   const DraggableContainer({Key? key}) : super(key: key);
@@ -25,6 +26,21 @@ class _DraggableContainerState extends State<DraggableContainer> {
 
   @override
   Widget build(BuildContext context) {
+
+    Polygon poly = Polygon(
+        [
+          Point(5,5),
+          Point(10,0),
+          Point(10,10),
+          Point(20,10),
+          Point(20,0),
+          Point(40,0),
+          Point(30,40),
+          Point(0,40),
+        ]
+    );
+    var path = poly.toPath();
+
     return Container(
       width: 600,
       height: 400,
@@ -35,23 +51,37 @@ class _DraggableContainerState extends State<DraggableContainer> {
           setState(() {
             var bound = context.globalPaintBounds;
             Rect rect = Rect.zero;
-            var path = Path();
             if(bound!= null)
               {
+                //按钮的世界坐标上的盒子
                 rect = Rect.fromLTRB(bound.left+btnPos.dx, bound.top + btnPos.dy
                     , bound.left + btnPos.dx + 40, bound.top + btnPos.dy + 40);
                 if(rect.contains(e.position)
                 )
                   {
-                    _hover = true;
-                    _log = '在里面哦';
+
+                    // _hover = true;
+                    // _log = '在矩形里面哦';
+
+
+                    //region 在矩形里面,再检测一下点是否在path中.
+                    //鼠标在按钮中的相对位置
+                    var xOffsetOfBtn = e.position.dx - rect.left;
+                    var yOffsetOfBtn = e.position.dy - rect.top;
+
+                    var ret = checkIsPtInPoly(Point(xOffsetOfBtn, yOffsetOfBtn),poly.points);
+                    //endregion
+
+                    _log = '在多边形里面吗? $ret';
+                    _hover = ret;
                   }
                 else
                   {
                     _hover = false;
+                    _log = '';
                   }
               }
-            _log = '在大框框移动 ${e.position}';
+            // _log = '在大框框移动 ${e.position}';
           });
           // print('hover$e');
         },
@@ -208,8 +238,13 @@ class _DraggableContainerState extends State<DraggableContainer> {
                       color:
                       _dragging? Colors.purple:
                       _hover ? Colors.deepOrange : Colors.cyan),
-                      child: FloatingActionButton(onPressed: () {  },
-                        child: Text('ddd'),
+                      child:
+                      ClipPath(
+                        clipper: MyPathClipper(path),
+                        child:
+                      Container(
+                        child: Container(width: 40,height: 40, color: Colors.black38,),
+                      ),
                       ),
                 ),
                 // ),
@@ -236,5 +271,21 @@ class DraggableContainerPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return true;
+  }
+}
+
+
+
+class MyPathClipper extends CustomClipper<Path> {
+  final Path path;
+  MyPathClipper(this.path);
+  @override
+  Path getClip(Size size) {
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) {
+    return false;
   }
 }

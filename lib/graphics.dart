@@ -6,6 +6,8 @@
 import 'dart:ui';
 import 'dart:math' as math;
 
+import 'package:flutter/material.dart';
+
 // import 'package:flutter/cupertino.dart';
 
 /// <summary>Returns an array of <see cref="T:System.Drawing.RectangleF" /> structures that approximate this <see cref="T:System.Drawing.Region" /> after the specified matrix transformation is applied.</summary>
@@ -19,7 +21,7 @@ import 'dart:math' as math;
 /// </PermissionSet>
 enum Position
 {
-  CONTAINS,INSIDE,OVERLAPS,EQUAL,DISJOINT,TOUCHING
+  CONTAINS,INSIDE,OVERLAPS,EQUAL,DISJOINT,TOUCHING,UNKNOW
 }
 var dp = 2;
 var dp1 = dp-1;
@@ -28,9 +30,18 @@ var inf = double.infinity;
 
 double round(double value,int? digits)
 {
+  if(value.isNaN)
+    {
+      print('这是空啊这是!!!!');
+      print(value);
+    }
+  if(value == double.infinity)
+    {
+      return value;
+    }
   if(digits== null || digits<1)
     {
-      return value.truncate() as double;
+      return value.truncate().toDouble();
     }
   var fixedStr = value.toStringAsFixed(digits);
   var fixed = double.parse(fixedStr);
@@ -41,13 +52,13 @@ double abs(double value)
 {
   return value>0?value:(0-value);
 }
-num min(List<num> list)
+double min(List<double> list)
 {
-  num minVal = list.reduce((v, e) => math.min(v, e));
+  double minVal = list.reduce((v, e) => math.min(v, e));
   return minVal;
 }
-num max(List<num> list) {
-num maxVal = list.reduce((v, e) => math.max(v, e));
+double max(List<double> list) {
+double maxVal = list.reduce((v, e) => math.max(v, e));
 return maxVal;
 }
 
@@ -55,7 +66,7 @@ return maxVal;
 class SweepPastResult<P,S>
 {
   final Position position;
-  final List<Seg>? segList;
+  final List<Seg> segList;
 
   SweepPastResult(this.position, this.segList);
 }
@@ -64,6 +75,10 @@ class SweepPastResult<P,S>
 
 class Region
 {
+  createSVGTransform()
+  {
+
+  }
   getRotatedCoords(List<Poly> polyList, xdp)
   {
     getBestAngle(polyList){
@@ -102,6 +117,28 @@ class Region
       else{
         polyRotated = [];
         //TODO 这里还有一部分没有写.需要用到SVG相关的东西
+
+  //       polyrotated = []
+  //       t = svgbase.createSVGTransform()
+  //       t.setRotate(a*180/pi, 5500, 5500)
+  //       M = t.matrix
+  //       P = poly.points
+  //       L = P.numberOfItems
+  //       for i in range(L):
+  //   pt = P.getItem(i)
+  //   newpt =  pt.matrixTransform(M)
+  // polyrotated.append((newpt.x, newpt.y))
+  //       var t = createSVGTransform();
+  //       t.setRotate(a*180/math.pi, 5500,5500);
+  //       var M = t.matrix;
+  //       // poly.points????????
+  //       var P = poly.pointList;
+  //       var L = P.length;
+  //       for(var i=0;i<L;i++){
+  //         var pt = P[i];
+  //         Matrix4
+  //         var newPt = pt
+  //       }
       }
       var coords = <Coord>[];
       for(var coord in polyRotated) {
@@ -116,8 +153,8 @@ class Region
   {
     var polyA = self.pointList;
     var polyB = other.pointList;
-    var coordsList1 , coordsList2;
-    coordsList1 = coordsList2 = getRotatedCoords([self,other], dp);
+    List<List<Coord>> coordsLists = getRotatedCoords([self,other], dp);
+    List<Coord> coordsList1 = coordsLists[0]; List<Coord> coordsList2 = coordsLists[1];
     var transposed = false;
     var bBoxResult = compareBoundingBoxes(coordsList1, coordsList2, null, dp);
     if([Position.DISJOINT, Position.TOUCHING].contains(bBoxResult)){
@@ -148,10 +185,10 @@ class Region
       polyB = polyTemp;
       transposed = true;
     }
-    List<Seg> unUsedSegments = getStoredSegments([self,other], coordsList1+coordsList2);
+    List<Seg> unUsedSegments = getStoredSegments([self,other], [coordsList1,coordsList2]);
 
-    late List<Seg>? liveSegments = [];
-    Position currentOutCome = Position.EQUAL;
+    List<Seg> liveSegments = [];
+    Position currentOutCome = Position.UNKNOW;
     List<Coord> coords1And2 = coordsList1 + coordsList2;
     coords1And2.sort((a,b){
       return a.x>b.x? 1
@@ -169,11 +206,12 @@ class Region
       for (var i = 0; i < livesegments.length; i++) {
         var seg = livesegments[i];
         if (seg.rightX == x) {
-          seg.y = seg.rightY.truncate() as double;
+          seg.y = round(seg.rightY, dp2);
         }
         else {
           seg.y =
-          (seg.leftY + (x - seg.leftX) * seg.gradient).truncate() as double;
+          seg.gradient.isInfinite?double.nan:
+              round(seg.leftY + (x-seg.leftX)*seg.gradient, dp2);
         }
       }
       for (var i = 0; i < livesegments.length; i++) {
@@ -185,7 +223,7 @@ class Region
             continue;
           }
           if (seg.y > seg2.y && seg.poly != seg2.poly) {
-            return SweepPastResult(Position.OVERLAPS, null);
+            return SweepPastResult(Position.OVERLAPS, []);
           }
         }
       }
@@ -200,20 +238,22 @@ class Region
         }
       }
       livesegments = newLiveSegments;
-      while (unUsedSegments.isNotEmpty
-              && round(unUsedSegments[0].leftX, dp1) ==
-              round(unUsedSegments[0].x, dp1)) {
-        var newSeg = unUsedSegments[0];
-        unUsedSegments.removeAt(0);
+      var unUsedSegmentsCopy = [];unUsedSegmentsCopy.addAll(unUsedSegments);
+      while (unUsedSegmentsCopy.isNotEmpty
+              && round(unUsedSegmentsCopy[0].leftX, dp1) ==
+              round(unUsedSegmentsCopy[0].x, dp1)) {
+        var newSeg = unUsedSegmentsCopy[0];
+        unUsedSegmentsCopy.removeAt(0);
         newSeg.y = round(newSeg.leftY, dp2);
+        livesegments.add(newSeg);
       }
-      unUsedSegments.sort((a, b) {
+      livesegments.sort((a, b) {
         int ret = a.y > b.y ? 1
             : a.y == b.y ? 0
             : -1;
         return ret;
       });
-      unUsedSegments.sort((a, b) {
+      livesegments.sort((a, b) {
         int ret = a.gradient > b.gradient ? 1
             : a.gradient == b.gradient ? 0
             : -1;
@@ -222,7 +262,7 @@ class Region
 
       var yValuesA = <double>[];
       for (var seg in livesegments) {
-        if (seg.poly == polyA) {
+        if (seg.poly == self) {
           yValuesA.add(seg.y);
         }
       }
@@ -235,7 +275,7 @@ class Region
 
       var yValuesB = <double>[];
       for (var seg in livesegments) {
-        if (seg.poly == polyB) {
+        if (seg.poly == other) {
           yValuesB.add(seg.y);
         }
       }
@@ -259,17 +299,17 @@ class Region
                 }
               if(startA<=startB && endA>=endB){
                 if(latestoutcome == Position.DISJOINT){
-                  return SweepPastResult(Position.OVERLAPS, null);
+                  return SweepPastResult(Position.OVERLAPS, []);
                 }
                 latestoutcome = Position.CONTAINS;
                 break;
               }
               else if((startB <startA && startA<endB) || (startB<endA && endA <endB)){
-                return SweepPastResult(Position.OVERLAPS, null);
+                return SweepPastResult(Position.OVERLAPS, []);
               }
               else{
                 if(latestoutcome == Position.CONTAINS){
-                  return SweepPastResult(Position.OVERLAPS, null);
+                  return SweepPastResult(Position.OVERLAPS, []);
                 }
                 latestoutcome = Position.DISJOINT;
               }
@@ -279,7 +319,7 @@ class Region
     }
 
     for(var x in xValues){
-      var ret = sweepPast(x, currentOutCome, liveSegments!);
+      var ret = sweepPast(x, currentOutCome, liveSegments);
       currentOutCome = ret.position;
       liveSegments = ret.segList;
       if(currentOutCome == Position.OVERLAPS) return currentOutCome;
@@ -300,7 +340,8 @@ class Region
         var len = coordList.length;
         for(var j=0;j<len;j++){
           //segments.extend([Segment(coordslist[i-1], coordslist[i], poly, ((i-1)%L, i)) for i in range(L)])
-          var coordA = coordList[j-1];
+          var aIndex = j<1?len-1:j-1;
+          var coordA = coordList[aIndex];
           var coordB = coordList[j];
           var int1 = [(j-1)%len , i];
           var seg = Seg(coordA, coordB, poly,int1);
@@ -328,7 +369,7 @@ class Region
   area(List<Coord> poly)
   {
     double area = 0;
-    var last = poly[-1];
+    var last = poly[poly.length-1];
     var x0 = last.x;
     var y0 = last.y;
     for(var p in poly)
@@ -341,17 +382,49 @@ class Region
       }
     return abs(area/2);
   }
-  equalPolygons(List<int> poly1, List<int> poly2)
+  bool equalPolygons(List<Coord> poly1, List<Coord> poly2)
   {
-    var min1 = min(poly1);
-    var start1 = poly1.indexOf(min1.toInt());
-    poly1 = poly1.sublist(start1+1)+poly1.sublist(0,start1);
+    if(poly1.length!=poly2.length) return false;
+    List<Offset> path1dots = poly1.map((e) => Offset(e.x,e.y)).toList();
+    List<Offset> path2dots = poly2.map((e)=>Offset(e.x,e.y)).toList();
 
-    var min2 = min(poly2);
-    var start2 = poly2.indexOf(min2.toInt());
-    poly2 = poly2.sublist(start2+1)+poly2.sublist(0,start2);
+    List<Offset> path1dotsCopy = [];path1dotsCopy.addAll(path1dots);
+    List<Offset> path2dotsCopy = [];path2dotsCopy.addAll(path2dots);
 
-    return poly1 == poly2 || poly1 == poly2.reversed;
+    path1dotsCopy.sort((a,b){
+      return a>b?1
+          :a==b?0
+          :-1;
+    });
+    path2dotsCopy.sort((a,b){
+      return a>b?1
+          :a==b?0
+          :-1;
+    });
+
+    for(var i=0;i<path2dotsCopy.length;i++)
+      {
+        var p1 = path1dotsCopy[i];
+        var p2 = path2dotsCopy[i];
+        if(p1.dx != p2.dx ||p1.dy != p2.dy) {
+          return false;
+        }
+      }
+    return true;
+
+
+    // var min1 = path1dotsCopy[0];
+    // var min2 = path2dotsCopy[0];
+    //
+    // // var min1 = min(poly1.map((e) => e.toDouble()).toList());
+    // var start1 = path1dots.indexOf(min1);
+    // poly1 = poly1.sublist(start1+1)+poly1.sublist(0,start1);
+    //
+    // // var min2 = min(poly2.map((e) => e.toDouble()).toList());
+    // var start2 = path2dots.indexOf(min2);
+    // poly2 = poly2.sublist(start2+1)+poly2.sublist(0,start2);
+    //
+    // return poly1 == poly2 || poly1 == poly2.reversed;
   }
 
   Rect getBoundingBox(List<Coord> poly, int? xdp, int? ydp)
@@ -392,7 +465,7 @@ class Region
     var right2 = rect2.right;
     var bottom2 = rect2.bottom;
 
-    var xResult = Position.CONTAINS;
+    var xResult = Position.UNKNOW;
 
     if(right1<left2 || right2<left1 || bottom1 < top2 || bottom2 < top1){
       return Position.DISJOINT;
@@ -476,7 +549,7 @@ class Coord
 }
 class Poly
 {
-  final pointList = <Coord>[];
+  var pointList = <Coord>[];
   final segments = <Seg>[];
 }
 
@@ -548,9 +621,15 @@ class Seg{
    dy = rightX-leftY;
 
    gradient = dx == 0? double.infinity : dy/dx;
+   if(gradient == double.infinity)
+     {
+       print('这咋就负无穷大了呢');
+     }
    angle = math.atan2(dy, dy)-math.pi/2+math.pi*(dy<0?1:0);
 
    y=leftY;
+   //抄过来的没有 自己加上的
+   x = leftX;
    xPos = "L";
  }
 }
