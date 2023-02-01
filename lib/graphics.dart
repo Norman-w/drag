@@ -60,13 +60,15 @@ class SweepPastResult<P,S>
   SweepPastResult(this.position, this.segList);
 }
 
+
+
 class Region
 {
-  getRotatedCoords(polyList, xdp)
+  getRotatedCoords(List<Poly> polyList, xdp)
   {
     getBestAngle(polyList){
       var anglesFromVertical = [];
-      for( var poly in polyList){
+      for(var poly in polyList){
         var segments = poly.segments;
         for(var seg in segments){
           var angle = round(abs(seg.angle), 3);
@@ -93,7 +95,7 @@ class Region
     var sinA = math.sin(a);
     List<List<Coord>> coordsLists = [];
     for(var poly in polyList){
-      var polyRotated = <Poly>[];
+      var polyRotated = <Coord>[];
       if(a==0){
         polyRotated = poly.pointList;
       }
@@ -102,20 +104,20 @@ class Region
         //TODO 这里还有一部分没有写.需要用到SVG相关的东西
       }
       var coords = <Coord>[];
-      for(poly in polyRotated) {
-          coords.add(Coord(round(poly.x, xdp), poly.y));
+      for(var coord in polyRotated) {
+          coords.add(Coord(round(coord.x, xdp), coord.y));
       }
       coordsLists.add(coords);
     }
     return coordsLists;
   }
   late double boundary;
-  Position relativeposition(Region self, Region other)
+  Position relativePosition(Poly self, Poly other)
   {
-    var polyA = self.boundary;
-    var polyB = other.boundary;
-    var coordsList1 = getRotatedCoords([polyA,polyB], dp);
-    var coordsList2 = getRotatedCoords([polyA,polyB], dp);
+    var polyA = self.pointList;
+    var polyB = other.pointList;
+    var coordsList1 , coordsList2;
+    coordsList1 = coordsList2 = getRotatedCoords([self,other], dp);
     var transposed = false;
     var bBoxResult = compareBoundingBoxes(coordsList1, coordsList2, null, dp);
     if([Position.DISJOINT, Position.TOUCHING].contains(bBoxResult)){
@@ -146,27 +148,23 @@ class Region
       polyB = polyTemp;
       transposed = true;
     }
-    List<Seg> unUsedSegments = getStoredSegments(polyA+polyB, coordsList1+coordsList2);
+    List<Seg> unUsedSegments = getStoredSegments([self,other], coordsList1+coordsList2);
 
-    List<Seg> liveSegments = [];
-    var currentOutCome;
+    late List<Seg>? liveSegments = [];
+    Position currentOutCome = Position.EQUAL;
     List<Coord> coords1And2 = coordsList1 + coordsList2;
     coords1And2.sort((a,b){
       return a.x>b.x? 1
           :a.x==b.x? 0
           :-1;
     });
-    var xValues = coords1And2;
-    for(var x in xValues){
-      var ret = SweepPastResult(x, liveSegments);
-      currentOutCome = ret[0];
-      liveSegments = ret[1];
-      if(currentOutCome == Position.OVERLAPS) return currentOutCome;
-    }
-    if(currentOutCome == Position.CONTAINS && transposed)
-      {
-        currentOutCome = Position.INSIDE;
+    var xValues = <double>[];
+    for(var c in coords1And2){
+      if(xValues.contains(c.x) == false){
+        xValues.add(c.x);
       }
+    }
+
     SweepPastResult sweepPast(x, Position latestoutcome, List<Seg> livesegments) {
       for (var i = 0; i < livesegments.length; i++) {
         var seg = livesegments[i];
@@ -279,18 +277,53 @@ class Region
         }
       return SweepPastResult(latestoutcome, livesegments);
     }
+
+    for(var x in xValues){
+      var ret = sweepPast(x, currentOutCome, liveSegments!);
+      currentOutCome = ret.position;
+      liveSegments = ret.segList;
+      if(currentOutCome == Position.OVERLAPS) return currentOutCome;
+    }
+    if(currentOutCome == Position.CONTAINS && transposed)
+    {
+      currentOutCome = Position.INSIDE;
+    }
     return currentOutCome;
   }
-  getStoredSegments(List<Poly> polyList,List< List<Coord>> coordsLists)
+  List<Seg> getStoredSegments(List<Poly> polyList,List< List<Coord>> coordsLists)
   {
-    var segments = [];
+    var segments = <Seg>[];
     for(var i=0;i<polyList.length; i++)
       {
         var poly = polyList[i];
         var coordList = coordsLists[i];
         var len = coordList.length;
-
+        for(var j=0;j<len;j++){
+          //segments.extend([Segment(coordslist[i-1], coordslist[i], poly, ((i-1)%L, i)) for i in range(L)])
+          var coordA = coordList[j-1];
+          var coordB = coordList[j];
+          var int1 = [(j-1)%len , i];
+          var seg = Seg(coordA, coordB, poly,int1);
+          segments.add(seg);
+        }
       }
+    //    segments.sort(key = lambda seg: (seg.leftx, round(seg.lefty, dp1), seg.gradient))
+    segments.sort((a,b){
+      return a.leftX > b.leftX?1
+          :a==b?0
+          :-1;
+    });
+    segments.sort((a,b){
+      return round(a.leftY, dp1) > round(b.leftY, dp1)?1
+          :a==b?0
+          :-1;
+    });
+    segments.sort((a,b){
+      return a.gradient > b.gradient?1
+          :a==b?0
+          :-1;
+    });
+    return segments;
   }
   area(List<Coord> poly)
   {
@@ -443,7 +476,8 @@ class Coord
 }
 class Poly
 {
-  final pointList = [];
+  final pointList = <Coord>[];
+  final segments = <Seg>[];
 }
 
 class Interval<T1, T2>
@@ -470,8 +504,8 @@ class Interval<T1, T2>
 // }
 
 class Seg{
-  late Offset leftPoint;
-  late Offset rightPoint;
+  late Coord leftPoint;
+  late Coord rightPoint;
   late List<int> leftIndex;
   late List<int> rightIndex;
   late double rightX;
@@ -489,21 +523,21 @@ class Seg{
   late double y;
   late double x;
   late String xPos;
-  Seg(Offset startpoint, Offset endPoint,this.poly, this.index) {
-   if (endPoint < startpoint) {
+  Seg(Coord startPoint, Coord endPoint,this.poly, this.index) {
+   if (Offset(endPoint.x,endPoint.y) < Offset(startPoint.x, startPoint.y)) {
      leftPoint = endPoint;
-     rightPoint = startpoint;
+     rightPoint = startPoint;
      rightIndex = leftIndex = index.reversed.toList();
    }
    else {
-     leftPoint = startpoint;
+     leftPoint = startPoint;
      rightPoint = endPoint;
      rightIndex = leftIndex = index;
    }
-   leftX = leftPoint.dx;
-   leftY = leftPoint.dy;
-   rightX = rightPoint.dx;
-   rightY = rightPoint.dy;
+   leftX = leftPoint.x;
+   leftY = leftPoint.y;
+   rightX = rightPoint.x;
+   rightY = rightPoint.y;
    if(rightY < leftY)
      {
        top = rightY;bottom = leftY;
