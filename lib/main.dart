@@ -1,7 +1,7 @@
 import 'package:drag/poly_draggable_container.dart';
 import 'package:flutter/material.dart';
 
-import 'point.dart';
+import 'point_ex.dart';
 import 'background.dart';
 import 'graphics.dart';
 import 'polygon_helper.dart';
