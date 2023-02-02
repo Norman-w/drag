@@ -2,9 +2,10 @@ import 'package:drag/widget.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
+import 'Point.dart';
 import 'polygon_helper.dart';
 import 'polygonal.dart';
-import 'polygonal_path.dart';
+import 'equilateral_polygon_path.dart';
 
 class PolyDraggableContainer extends StatefulWidget {
   const PolyDraggableContainer({Key? key}) : super(key: key);
@@ -15,24 +16,24 @@ class PolyDraggableContainer extends StatefulWidget {
 
 class _PolyDraggableContainerState extends State<PolyDraggableContainer> {
   var _hover = false;
-  var polygonalPath = PolygonalPath(size: 80,count: 40);
+  var backgroundPolygon = Polygon.fromEquilateralPolygonPath(
+      EquilateralPolygonPath(size: 170,count: 40)
+  );
+  // var polygonalPath = EquilateralPolygonPath(size: 170,count: 40);
+  var offset = Offset(200,0);
+  var containerSize = Size(200,200);
   //使用系统自带的Path做出来的圆,但是获取不到路径
   // var backCirclePath = Path();
   // var poly = Polygon(backCirclePath.getBounds());
 
   @override
   void initState() {
-    polygonalPath.offset(10,10);
-    Rect rect = Rect.fromCircle(
-      center: const Offset(50.0, 50.0),
-      radius: 50.0,
-    );
-    // backCirclePath.addArc(rect, 0, math.pi*2);
+    backgroundPolygon.offset(30,10);
     super.initState();
   }
   @override
   Widget build(BuildContext context) {
-    return Transform.translate(offset: Offset(100,0),child:
+    return Transform.translate(offset: offset,child:
         MouseRegion(
           onEnter: (e)
           {
@@ -47,20 +48,20 @@ class _PolyDraggableContainerState extends State<PolyDraggableContainer> {
           },
           onHover: (e){
             var bound = context.globalPaintBounds;
-            var offset = Point(e.position.dx - bound!.left-100, e.position.dy - bound.top);
+            var offset = PointEX(e.position.dx - bound!.left-this.offset.dx, e.position.dy - bound.top-this.offset.dy);
             setState(() {
-              var polyCirclePoints = polygonalPath.points.map((e) => Point(e.x,e.y)).toList();
+              var polyCirclePoints = backgroundPolygon.points.map((e) => PointEX(e.x,e.y)).toList();
               // print('位移量: $offset');
-              var inPolyCircle = checkIsPtInPoly(offset,polyCirclePoints);
+              var inPolyCircle = backgroundPolygon.isPointIn(offset);
               _hover = inPolyCircle;
             });
           },
           child: Container(
-            width: 100,
-            height: 100,
+            width: containerSize.width,
+            height: containerSize.height,
             color: Colors.grey,
             child: ClipPath(
-              clipper: PathClipper(polygonalPath.toPath()),
+              clipper: PathClipper(backgroundPolygon.getPath()),
               child:
               Container(width: 100,height: 100, color: _hover? Colors.red: Colors.amberAccent,),
               // Polygonal(

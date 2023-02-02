@@ -16,6 +16,9 @@
 import 'dart:ui';
 import 'dart:math';
 
+import 'Point.dart';
+import 'equilateral_polygon_path.dart';
+
 ///两个图形之间的包含关系.
 enum InclusionEnum
 {
@@ -52,6 +55,13 @@ enum TouchEnum
   ///两者的边有重叠的地方,并且前者和后者的边相同,也就是共边
   shareSide,
 }
+
+double fabs(double value) {
+  if(value.isInfinite || value.isInfinite) {return value;}
+  return value <0? 0-value: value;
+}
+var INFINITY = double.infinity;
+var ESP = 1e-5;
 
 ///两个多边形之间的关系
 class Relative
@@ -117,8 +127,8 @@ class Relative
 
 class Polygon{
   Polygon(this.points);
-  List<Point> points;
-  bool containsPoint(Point point){
+  List<PointEX> points;
+  bool containsEndPoint(PointEX point){
     for(var p in points){
       if(point.x == p.x && point.y == p.y) {
         return true;
@@ -126,9 +136,119 @@ class Polygon{
     }
     return false;
   }
+  bool isPointIn(PointEX point) {
+    return Polygon.isPointInPolygon(point, points);
+  }
+  static bool isPointInPolygon(PointEX point, List<PointEX> pts)
+  {
+    int N = pts.length;
+    //如果点位于多边形的顶点或边上，也算做点在多边形内，直接返回true
+    bool boundOrVertex = true;
+    //cross points count of x
+    int intersectCount = 0;
+    //浮点类型计算时候与0比较时候的容差
+    double precision = 2e-10;
+    //neighbour bound vertices
+    PointEX p1, p2;
+    //当前点
+    PointEX p = point;
+    //left vertex
+    p1 = pts[0];
+    //check all rays
+    for (int i = 1; i <= N; ++i) {
+      if (p.equals(p1)) {
+        //p is an vertex
+        return boundOrVertex;
+      }
+      //right vertex
+      p2 = pts[i % N];
+      //ray is outside of our interests
+      if (p.x < min(p1.x, p2.x) || p.x > max(p1.x, p2.x)) {
+        p1 = p2;
+        //next ray left point
+        continue;
+      }
+      //ray is crossing over by the algorithm (common part of)
+      if (p.x > min(p1.x, p2.x) && p.x < max(p1.x, p2.x)) {
+        //x is before of ray
+        if (p.y <= max(p1.y, p2.y)) {
+          //overlies on a horizontal ray
+          if (p1.x == p2.x && p.y >= min(p1.y, p2.y)) {
+            return boundOrVertex;
+          }
+          //ray is vertical
+          if (p1.y == p2.y) {
+            //overlies on a vertical ray
+            if (p1.y == p.y) {
+              return boundOrVertex;
+              //before ray
+            } else {
+              ++intersectCount;
+            }
+          } else {
+            //cross point on the left side
+            //cross point of y
+            double xinters = (p.x - p1.x) * (p2.y - p1.y) / (p2.x - p1.x) + p1.y;
+            //overlies on a ray
+            if (fabs(p.y - xinters) < precision) {
+              return boundOrVertex;
+            }
+            //before ray
+            if (p.y < xinters) {
+              ++intersectCount;
+            }
+          }
+        }
+      } else {
+        //special case when ray is crossing through the vertex
+        //p crossing over p2
+        if (p.x == p2.x && p.y <= p2.y) {
+          //next vertex
+          PointEX p3 = pts[(i + 1) % N];
+          //p.x lies between p1.x & p3.x
+          if (p.x >= min(p1.x, p3.x) && p.x <= max(p1.x, p3.x)) {
+            ++intersectCount;
+          } else {
+            intersectCount += 2;
+          }
+        }
+      }
+      //next ray left point
+      p1 = p2;
+    }
+    //偶数在多边形外
+    if (intersectCount % 2 == 0) {
+      return false;
+    } else {
+      //奇数在多边形内
+      return true;
+    }
+  }
+  factory Polygon.fromEquilateralPolygonPath(EquilateralPolygonPath path){
+    return Polygon(path.points.map((e)=>PointEX(e.x,e.y)).toList());
+  }
+  ///移动当前的对象并创建一个新实例
+  void offset(double x,double y)
+  {
+    // var newPath = PolygonalPath(size:size,count:count);
+    // for(var p in newPath.points)
+    //   {
+    //     p = p + Point(x,y);
+    //   }
+    for(var i=0;i<points.length;i++){
+      points[i].x += x;
+      points[i].y += y;
+    }
+  }
+  Path getPath()
+  {
+    var path = Path();
+    path.addPolygon(points.map((e) => Offset(e.x,e.y)).toList(), true);
+    return path;
+  }
 }
 
-extension PathRelativeWith on Polygon
+extension PolygonPathRelativeWith on Polygon
 {
   Relative getRelativeWith(Polygon other)
   {
@@ -139,7 +259,7 @@ extension PathRelativeWith on Polygon
     if(points.length == other.points.length){
       //如果所有点都相等,那就是相同
       for(var selfPoint in points){
-        if(other.containsPoint(selfPoint) == false) {
+        if(other.containsEndPoint(selfPoint) == false) {
           allPointSame = false;
         }
       }
@@ -155,7 +275,7 @@ extension PathRelativeWith on Polygon
       // var selfPath = getPath();
       for(var selfPoint in points)
         {
-          var selfPointIsInOtherPoly = checkIsPtInPoly(selfPoint, other.points);
+          var selfPointIsInOtherPoly = Polygon.isPointInPolygon(selfPoint, other.points);
           if(selfPointIsInOtherPoly == false)
             {
               inside = false;
@@ -167,7 +287,7 @@ extension PathRelativeWith on Polygon
       }
       var contains = true;
       for(var otherPoint in other.points){
-        var c = checkIsPtInPoly(otherPoint, points);
+        var c = Polygon.isPointInPolygon(otherPoint, points);
         if(!c){contains = false;}
       }
       if(contains) {
@@ -178,7 +298,6 @@ extension PathRelativeWith on Polygon
     //endregion
     return ret;
   }
-
   Path toPath(){
     Path path = Path();
     path.addPolygon(points.map((e) => Offset(e.x,e.y)).toList(), true);
@@ -186,175 +305,39 @@ extension PathRelativeWith on Polygon
   }
 }
 
-
-
-class LineSegment {
-late Point pt1 = Point(0, 0);
-late Point pt2 = Point(0, 0);
-}
-class Point {
-  Point(this.x,this.y);
-  late double x;
-  late double y;
-  bool equals(other){
-    return other.x == x && other.y == y;
-  }
-  @override
-  String toString() {
-    return "点(x:$x , y:$y)";
-  }
-}
-double fabs(double value) {
-  if(value.isInfinite || value.isInfinite) {return value;}
-  return value <0? 0-value: value;
-}
-var INFINITY = double.infinity;
-var ESP = 1e-5;
-// 计算叉乘 |P0P1| × |P0P2|
-double Multiply(Point p1, Point p2, Point p0)
-{
-  return ( (p1.x - p0.x) * (p2.y - p0.y) - (p2.x - p0.x) * (p1.y - p0.y) );
-}
-// 判断线段是否包含点point
-bool  IsOnline(Point point, LineSegment line)
-{
-  return( ( fabs(Multiply(line.pt1, line.pt2, point)) < ESP ) &&
-      ( ( point.x - line.pt1.x ) * ( point.x - line.pt2.x ) <= 0 ) &&
-      ( ( point.y - line.pt1.y ) * ( point.y - line.pt2.y ) <= 0 ) );
-}
-// 判断线段相交
-bool Intersect(LineSegment L1, LineSegment L2)
-{
-  return( (max(L1.pt1.x, L1.pt2.x) >= min(L2.pt1.x, L2.pt2.x)) &&
-      (max(L2.pt1.x, L2.pt2.x) >= min(L1.pt1.x, L1.pt2.x)) &&
-      (max(L1.pt1.y, L1.pt2.y) >= min(L2.pt1.y, L2.pt2.y)) &&
-      (max(L2.pt1.y, L2.pt2.y) >= min(L1.pt1.y, L1.pt2.y)) &&
-      (Multiply(L2.pt1, L1.pt2, L1.pt1) * Multiply(L1.pt2, L2.pt2, L1.pt1) >= 0) &&
-      (Multiply(L1.pt1, L2.pt2, L2.pt1) * Multiply(L2.pt2, L1.pt2, L2.pt1) >= 0)
-  );
-}
-// 判断点在多边形内
-bool InPolygon(Polygon polygon, Point point) {
-  int n = polygon.points.length;
-  int count = 0;
-  var line = LineSegment();
-  line.pt1 = point;
-  line.pt2.y = point.y;
-  line.pt2.x = -INFINITY;
-  for (int i = 0; i < n; i++) {
-    // 得到多边形的一条边
-    var side = LineSegment();
-    side.pt1 = polygon.points[i];
-    side.pt2 = polygon.points[(i + 1) % n];
-    if (IsOnline(point, side)) {
-      return true;
-    }
-    // 如果side平行x轴则不作考虑
-    if (fabs(side.pt1.y - side.pt2.y) < ESP) {
-      continue;
-    }
-    if (IsOnline(side.pt1, line)) {
-      if (side.pt1.y > side.pt2.y) count++;
-    } else if (IsOnline(side.pt2, line)) {
-      if (side.pt2.y > side.pt1.y) count++;
-    } else if (Intersect(line, side)) {
-      count++;
-    }
-  }
-  if (count % 2 == 1) {
-    return false;
-  }
-  else {
-    return true;
-  }
-}
-
-bool checkIsInPolygon(Polygon polygon,Point point){
-  return checkIsPtInPoly(point, polygon.points);
-}
-
-bool checkIsPtInPoly(Point point, List<Point> pts) {
-  int N = pts.length;
-  //如果点位于多边形的顶点或边上，也算做点在多边形内，直接返回true
-  bool boundOrVertex = true;
-  //cross points count of x
-  int intersectCount = 0;
-  //浮点类型计算时候与0比较时候的容差
-  double precision = 2e-10;
-  //neighbour bound vertices
-  Point p1, p2;
-  //当前点
-  Point p = point;
-  //left vertex
-  p1 = pts[0];
-  //check all rays
-  for (int i = 1; i <= N; ++i) {
-    if (p.equals(p1)) {
-      //p is an vertex
-      return boundOrVertex;
-    }
-    //right vertex
-    p2 = pts[i % N];
-    //ray is outside of our interests
-    if (p.x < min(p1.x, p2.x) || p.x > max(p1.x, p2.x)) {
-      p1 = p2;
-      //next ray left point
-      continue;
-    }
-    //ray is crossing over by the algorithm (common part of)
-    if (p.x > min(p1.x, p2.x) && p.x < max(p1.x, p2.x)) {
-      //x is before of ray
-      if (p.y <= max(p1.y, p2.y)) {
-        //overlies on a horizontal ray
-        if (p1.x == p2.x && p.y >= min(p1.y, p2.y)) {
-          return boundOrVertex;
-        }
-        //ray is vertical
-        if (p1.y == p2.y) {
-          //overlies on a vertical ray
-          if (p1.y == p.y) {
-            return boundOrVertex;
-            //before ray
-          } else {
-            ++intersectCount;
-          }
-        } else {
-          //cross point on the left side
-          //cross point of y
-          double xinters = (p.x - p1.x) * (p2.y - p1.y) / (p2.x - p1.x) + p1.y;
-          //overlies on a ray
-          if (fabs(p.y - xinters) < precision) {
-            return boundOrVertex;
-          }
-          //before ray
-          if (p.y < xinters) {
-            ++intersectCount;
-          }
-        }
-      }
-    } else {
-      //special case when ray is crossing through the vertex
-      //p crossing over p2
-      if (p.x == p2.x && p.y <= p2.y) {
-        //next vertex
-        Point p3 = pts[(i + 1) % N];
-        //p.x lies between p1.x & p3.x
-        if (p.x >= min(p1.x, p3.x) && p.x <= max(p1.x, p3.x)) {
-          ++intersectCount;
-        } else {
-          intersectCount += 2;
-        }
-      }
-    }
-    //next ray left point
-    p1 = p2;
-  }
-  //偶数在多边形外
-  if (intersectCount % 2 == 0) {
-    return false;
-  } else {
-    //奇数在多边形内
-    return true;
-  }
-}
+// // 判断点在多边形内 这个方法对我还说并不好用 只能检测到点是否在直线上.
+// bool InPolygon(Polygon polygon, Point point) {
+//   int n = polygon.points.length;
+//   int count = 0;
+//   var line = LineSegment();
+//   line.pt1 = point;
+//   line.pt2.y = point.y;
+//   line.pt2.x = -INFINITY;
+//   for (int i = 0; i < n; i++) {
+//     // 得到多边形的一条边
+//     var side = LineSegment();
+//     side.pt1 = polygon.points[i];
+//     side.pt2 = polygon.points[(i + 1) % n];
+//     if (IsOnline(point, side)) {
+//       return true;
+//     }
+//     // 如果side平行x轴则不作考虑
+//     if (fabs(side.pt1.y - side.pt2.y) < ESP) {
+//       continue;
+//     }
+//     if (IsOnline(side.pt1, line)) {
+//       if (side.pt1.y > side.pt2.y) count++;
+//     } else if (IsOnline(side.pt2, line)) {
+//       if (side.pt2.y > side.pt1.y) count++;
+//     } else if (Intersect(line, side)) {
+//       count++;
+//     }
+//   }
+//   if (count % 2 == 1) {
+//     return false;
+//   }
+//   else {
+//     return true;
+//   }
+// }
 

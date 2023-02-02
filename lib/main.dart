@@ -1,6 +1,7 @@
 import 'package:drag/poly_draggable_container.dart';
 import 'package:flutter/material.dart';
 
+import 'Point.dart';
 import 'background.dart';
 import 'graphics.dart';
 import 'polygon_helper.dart';
@@ -45,36 +46,35 @@ class MyApp extends StatelessWidget {
     // var contains = path.contains(point);
     var ret = "";
 
-
     Polygon p1 = Polygon(
         [
-          Point(1, 1),
-          Point(100, 0),
-          Point(100, 100),
-          Point(0, 100),
+          PointEX(1, 1),
+          PointEX(100, 0),
+          PointEX(100, 100),
+          PointEX(0, 100),
         ]
     );
     Polygon p2 = Polygon(
         [
-          Point(0, 0),
-          Point(100, 0),
-          Point(100, 100),
-          Point(0, 100),
+          PointEX(0, 0),
+          PointEX(100, 0),
+          PointEX(100, 100),
+          PointEX(0, 100),
         ]
     );
     Polygon p3 = Polygon(
         [
-          Point(0,0),
-          Point(10,0),
-          Point(10,10),
-          Point(20,10),
-          Point(20,0),
-          Point(30,0),
-          Point(30,40),
-          Point(0,40),
+          PointEX(0,0),
+          PointEX(10,0),
+          PointEX(10,10),
+          PointEX(20,10),
+          PointEX(20,0),
+          PointEX(30,0),
+          PointEX(30,40),
+          PointEX(0,40),
         ]
     );
-    print(checkIsInPolygon(p3, Point(10,0)));
+    print(p3.isPointIn(PointEX(10,0)));
 
     ret = p2.getRelativeWith(p1).toString();
     // print(ret);

@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 
 /// 使用边创建正多少边的形状
-class PolygonalPath {
+class EquilateralPolygonPath {
   final double size; // 组件大小
   final int count; // 几边形
   late var points = <Point<double>>[];
 
 
 
-  PolygonalPath(
+  EquilateralPolygonPath(
       {
         this.size = 80,
         this.count = 3,}){
@@ -43,17 +43,5 @@ class PolygonalPath {
     var path = Path();
     path.addPolygon(points.map((e) => Offset(e.x,e.y)).toList(), true);
     return path;
-  }
-  ///移动当前的对象并创建一个新实例
-  void offset(double x,double y)
-  {
-    // var newPath = PolygonalPath(size:size,count:count);
-    // for(var p in newPath.points)
-    //   {
-    //     p = p + Point(x,y);
-    //   }
-    for(var i=0;i<points.length;i++){
-      points[i] += Point(x,y);
-    }
   }
 }

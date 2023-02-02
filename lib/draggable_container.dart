@@ -1,9 +1,7 @@
-import 'dart:async';
-
 import 'package:drag/widget.dart';
 import 'package:flutter/material.dart';
 
-import 'draggable_element.dart';
+import 'Point.dart';
 import 'polygon_helper.dart';
 
 class DraggableContainer extends StatefulWidget {
@@ -41,14 +39,14 @@ class _DraggableContainerState extends State<DraggableContainer> {
 
     Polygon poly = Polygon(
         [
-          Point(5,5),
-          Point(10,0),
-          Point(10,10),
-          Point(20,10),
-          Point(20,0),
-          Point(30,0),
-          Point(30,30),
-          Point(0,30),
+          PointEX(5,5),
+          PointEX(10,0),
+          PointEX(10,10),
+          PointEX(20,10),
+          PointEX(20,0),
+          PointEX(30,0),
+          PointEX(30,30),
+          PointEX(0,30),
         ]
     );
     var path = poly.toPath();
@@ -81,7 +79,7 @@ class _DraggableContainerState extends State<DraggableContainer> {
                     var xOffsetOfBtn = e.position.dx - rect.left;
                     var yOffsetOfBtn = e.position.dy - rect.top;
 
-                    var ret = checkIsPtInPoly(Point(xOffsetOfBtn, yOffsetOfBtn),poly.points);
+                    var ret = poly.isPointIn(PointEX(xOffsetOfBtn, yOffsetOfBtn));
                     //endregion
 
                     _log = '在多边形里面吗? $ret';
