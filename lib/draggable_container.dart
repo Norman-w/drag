@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drag/widget.dart';
 import 'package:flutter/material.dart';
 
@@ -12,6 +14,16 @@ class DraggableContainer extends StatefulWidget {
 }
 
 class _DraggableContainerState extends State<DraggableContainer> {
+  @override
+  void initState() {
+    super.initState();
+    // double offset = 0;
+    // Timer.periodic(Duration(milliseconds: 500), (timer) {
+    //   btnPos = btnPos.translate(offset+=1, offset+=1);
+    // });
+  }
+
+
   var _hover = false;
   var _dragging = false;
   //可拖动组件在鼠标按下时候的左上角位置.
@@ -34,9 +46,9 @@ class _DraggableContainerState extends State<DraggableContainer> {
           Point(10,10),
           Point(20,10),
           Point(20,0),
-          Point(40,0),
-          Point(30,40),
-          Point(0,40),
+          Point(30,0),
+          Point(30,30),
+          Point(0,30),
         ]
     );
     var path = poly.toPath();
@@ -176,61 +188,8 @@ class _DraggableContainerState extends State<DraggableContainer> {
               Positioned(
                 top: btnPos.dy,
                 left: btnPos.dx,
-                // child: MouseRegion(
-                //   onHover: (e)
-                //   {
-                //     setState(() {
-                //       _hover = true;
-                //       _log='悬停了';
-                //     });
-                //     // print('hover$e');
-                //   },
-                //   onExit: (e)
-                //   {
-                //     setState(() {
-                //       _hover = false;
-                //       _log='离开了';
-                //     });
-                //   },
                 child:
-                    // Listener(
-                    //   onPointerDown: (e){
-                    //     var bound = context.globalPaintBounds;
-                    //     setState(() {
-                    //       _mouseDownPosition = e.position;
-                    //       _log='点下呢,鼠标点$_mouseDownPosition 当前组件的位置:$bound';
-                    //     });
-                    //
-                    //     // var bound = context.globalPaintBounds;
-                    //     // var isIn = bound?.contains(e.position);
-                    //     // print('点击:$isIn');
-                    //   },
-                    //   onPointerMove: (e)
-                    //   {
-                    //     double moveX = 0;
-                    //     double moveY = 0;
-                    //     if(_mouseDownPosition!= null) {
-                    //       moveX = e.position.dx - _mouseDownPosition!.dx;
-                    //       moveY = e.position.dy - _mouseDownPosition!.dy;
-                    //     }
-                    //     else
-                    //       {
-                    //         setState(() {
-                    //           _mouseDownPosition = null;
-                    //           _log='移动出问题呢';
-                    //         });
-                    //         return;
-                    //       }
-                    //     btnPos = Offset(moveX, moveY);
-                    //   },
-                    //   onPointerUp: (e)
-                    //   {
-                    //     setState(() {
-                    //       _mouseDownPosition = null;
-                    //       _log='抬起呢';
-                    //     });
-                    //   },
-                    //   child:
+
                     Container(
                   width: 40,
                   height: 40,

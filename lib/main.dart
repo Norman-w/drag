@@ -1,3 +1,4 @@
+import 'package:drag/poly_draggable_container.dart';
 import 'package:flutter/material.dart';
 
 import 'background.dart';
@@ -85,8 +86,11 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: Text(ret.toString()),
         ),
-        body: const Center(
-          child: Background(),
+        body: Row(
+          children: const [
+            Background(),
+            PolyDraggableContainer(),
+        ]
         ),
       ),
     );

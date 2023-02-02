@@ -199,6 +199,10 @@ class Point {
   bool equals(other){
     return other.x == x && other.y == y;
   }
+  @override
+  String toString() {
+    return "点(x:$x , y:$y)";
+  }
 }
 double fabs(double value) {
   if(value.isInfinite || value.isInfinite) {return value;}
