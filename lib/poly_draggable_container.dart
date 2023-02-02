@@ -2,7 +2,7 @@ import 'package:drag/widget.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-import 'Point.dart';
+import 'point.dart';
 import 'polygon_helper.dart';
 import 'polygonal.dart';
 import 'equilateral_polygon_path.dart';
