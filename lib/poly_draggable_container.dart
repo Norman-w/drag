@@ -19,6 +19,7 @@ class _PolyDraggableContainerState extends State<PolyDraggableContainer> {
   var backgroundPolygon = Polygon.fromEquilateralPolygonPath(
       EquilateralPolygonPath(size: 170,count: 40)
   );
+  // var innerPolygon = Polygon.
   // var polygonalPath = EquilateralPolygonPath(size: 170,count: 40);
   var offset = Offset(200,0);
   var containerSize = Size(200,200);
@@ -63,7 +64,16 @@ class _PolyDraggableContainerState extends State<PolyDraggableContainer> {
             child: ClipPath(
               clipper: PathClipper(backgroundPolygon.getPath()),
               child:
-              Container(width: 100,height: 100, color: _hover? Colors.red: Colors.amberAccent,),
+              Container(width: 100,height: 100, color: _hover? Colors.red: Colors.orange,
+                child:
+                  Center(child:OutlinedButton(
+                    onPressed: () {},
+                    style: const ButtonStyle(),
+                    child: const Text("testt"),
+                  )
+
+                  ),
+              ),
               // Polygonal(
               //   size: 100,
               //   bigR: 50,
