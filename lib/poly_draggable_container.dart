@@ -19,17 +19,19 @@ class _PolyDraggableContainerState extends State<PolyDraggableContainer> {
   var backgroundPolygon = Polygon.fromEquilateralPolygonPath(
       EquilateralPolygonPath(size: 170,count: 40)
   );
-  // var innerPolygon = Polygon.
+  var innerPolygon = Polygon.fromEquilateralPolygonPath(
+      EquilateralPolygonPath(size: 30, count:20)
+  );
   // var polygonalPath = EquilateralPolygonPath(size: 170,count: 40);
-  var offset = Offset(200,0);
-  var containerSize = Size(200,200);
+  var offset = Offset(35,0);
+  var containerSize = Size(450,200);
   //使用系统自带的Path做出来的圆,但是获取不到路径
   // var backCirclePath = Path();
   // var poly = Polygon(backCirclePath.getBounds());
 
   @override
   void initState() {
-    backgroundPolygon.offset(30,10);
+    backgroundPolygon.offset(50,12);
     super.initState();
   }
   @override
@@ -66,12 +68,16 @@ class _PolyDraggableContainerState extends State<PolyDraggableContainer> {
               child:
               Container(width: 100,height: 100, color: _hover? Colors.red: Colors.orange,
                 child:
-                  Center(child:OutlinedButton(
-                    onPressed: () {},
-                    style: const ButtonStyle(),
-                    child: const Text("testt"),
-                  )
-
+                  Center(child:
+                      ClipPath(
+                        clipper: PathClipper(innerPolygon.getPath()),
+                        child: Container(
+                            width: 40,
+                            height: 40,
+                            color: _hover?
+                            Colors.lightGreenAccent: Colors.deepPurple
+                        ),
+                      )
                   ),
               ),
               // Polygonal(
