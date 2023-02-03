@@ -1,31 +1,29 @@
-import 'package:flutter/material.dart';
 import 'dart:math';
 
+import 'point_ex.dart';
+import 'polygon.dart';
+
+
 /// 使用边创建正多少边的形状
-class EquilateralPolygonPath {
+class EquilateralPolygon extends Polygon {
   final double size; // 组件大小
   final int count; // 几边形
-  late var points = <Point<double>>[];
-
-
-
-  EquilateralPolygonPath(
+  EquilateralPolygon(
       {
         this.size = 80,
-        this.count = 3,}){
+        this.count = 3,}) : super([]){
     //region 函数定义
     start(double x, double y)
     {
-      points.add(Point(x,y));
+      points.add(PointEX(x,y));
     }
     lineTo(double x, double y)
     {
-      points.add(Point(x,y));
+      points.add(PointEX(x,y));
     }
     //endregion
 
     double r = size / 2;
-    print(r);
     // 将圆等分,开始第一个点
     start(r * cos(pi / count)+r, r * sin(pi / count)+r);
 
@@ -36,12 +34,5 @@ class EquilateralPolygonPath {
         lineTo(r * cos(pi / count * i)+r, r * sin(pi / count * i)+r);
       }
     }
-  }
-
-  Path toPath()
-  {
-    var path = Path();
-    path.addPolygon(points.map((e) => Offset(e.x,e.y)).toList(), true);
-    return path;
   }
 }

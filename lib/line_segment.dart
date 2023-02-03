@@ -1,13 +1,7 @@
 import 'dart:math';
 
 import 'point_ex.dart';
-
-
-
-double fabs(double value) {
-  if(value.isInfinite || value.isInfinite) {return value;}
-  return value <0? 0-value: value;
-}
+import 'utils.dart';
 
 var INFINITY = double.infinity;
 var ESP = 1e-5;

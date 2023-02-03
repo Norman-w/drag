@@ -2,6 +2,7 @@ import 'package:drag/widget.dart';
 import 'package:flutter/material.dart';
 
 import 'point_ex.dart';
+import 'polygon.dart';
 import 'polygon_helper.dart';
 
 class DraggableContainer extends StatefulWidget {

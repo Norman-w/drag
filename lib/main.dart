@@ -1,9 +1,11 @@
-import 'package:drag/poly_draggable_container.dart';
+import 'package:drag/useless/poly_draggable_container.dart';
 import 'package:flutter/material.dart';
 
+import 'clipped_container.dart';
 import 'point_ex.dart';
 import 'background.dart';
 import 'graphics.dart';
+import 'polygon.dart';
 import 'polygon_helper.dart';
 
 void main() => runApp(MyApp());
@@ -79,18 +81,64 @@ class MyApp extends StatelessWidget {
     ret = p2.getRelativeWith(p1).toString();
     // print(ret);
 
+    Offset childOffset = Offset(10,10);
+
+    var focusedNode = [];
+
 
     return MaterialApp(
       title: 'Material App',
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
           title: Text(ret.toString()),
         ),
         body: Row(
-          children: const [
+          children: [
             Background(),
-            PolyDraggableContainer(),
-        ]
+            // PolyDraggableContainer(),
+            ClippedContainer(
+              key:Key("1"),
+              onFocus: (){
+                print("onFocus parent");
+              },
+              backgroundColor: Colors.grey,
+              hoverColor: Colors.white,
+              containerSize: Size(100, 100),
+              backgroundPolygon: Polygon([
+                PointEX(10, 5),
+                PointEX(100, 10),
+                PointEX(90, 100),
+                PointEX(0, 100),
+              ]
+              ),
+              child:
+                  Positioned(
+                    left: childOffset.dx,
+                    top: childOffset.dy,
+                    child:
+                      ClippedContainer(
+                        onFocus: (){
+                          print("onFocus child");
+                        },
+                        normalColor: Colors.red,
+                        hoverColor: Colors.amber,
+                        clickColor: Colors.purple,
+                        key : const Key("child"),
+                        backgroundColor: Colors.blue,
+                        containerSize: Size(20, 20),
+                        backgroundPolygon: Polygon([
+                          PointEX(0, 0),
+                          PointEX(20, 0),
+                          PointEX(20, 20),
+                          PointEX(0, 20),
+                        ]
+                        ),
+                        child: Text("child"),
+                      ),
+                    ),
+            ),
+          ]
         ),
       ),
     );
