@@ -53,8 +53,8 @@ class _DraggableContainerState extends State<DraggableContainer> {
     var path = poly.toPath();
 
     return Container(
-      width: 600,
-      height: 400,
+      width: 400,
+      height: 300,
       constraints: null,
       // decoration: const BoxDecoration(color: Colors.amber),
       child: MouseRegion(

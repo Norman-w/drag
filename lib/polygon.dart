@@ -23,6 +23,14 @@ class Polygon{
   {
     return isPointIn(PointEX(x, y));
   }
+  bool isContains(Polygon polygon){
+    for(var p in polygon.points){
+      if(!isPointIn(p)){
+        return false;
+      }
+    }
+    return true;
+  }
   static bool isPointInPolygon(PointEX point, List<PointEX> pts)
   {
     int N = pts.length;
@@ -121,6 +129,7 @@ class Polygon{
       points[i].y += y;
     }
   }
+
   Path getPath()
   {
     var path = Path();

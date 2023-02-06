@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'clipped_container.dart';
+import 'logMonitor/index.dart';
 import 'point_ex.dart';
 import 'background.dart';
+import 'poly_draggable_container.dart';
 import 'polygon.dart';
 import 'polygon_helper.dart';
 
@@ -24,7 +26,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('自父组件传递值测试'),
+          title: const Text('子父组件传递值测试'),
         ),
         body:const MainContainer(),
       ),
@@ -40,13 +42,10 @@ class MainContainer extends StatefulWidget {
   _MainContainerState createState() => _MainContainerState();
 }
 class _MainContainerState extends State<MainContainer> {
-  late bool ignoreEvent = false;
 
   @override
   void initState() {
     super.initState();
-    ignoreEvent = false;
-    print('*********initState*********');
   }
 
   //region this way is not work for me.may be there is some typo or syntax issues;
@@ -101,78 +100,27 @@ class _MainContainerState extends State<MainContainer> {
   );
   Polygon p3 = Polygon(
       [
-        PointEX(0,0),
-        PointEX(10,0),
-        PointEX(10,10),
-        PointEX(20,10),
-        PointEX(20,0),
-        PointEX(30,0),
-        PointEX(30,40),
-        PointEX(0,40),
+        PointEX(0, 0),
+        PointEX(10, 0),
+        PointEX(10, 10),
+        PointEX(20, 10),
+        PointEX(20, 0),
+        PointEX(30, 0),
+        PointEX(30, 40),
+        PointEX(0, 40),
       ]
   );
 
-  Offset childOffset = const Offset(10,10);
 
 
 
   @override
   Widget build(BuildContext context) {
-    print("******main build******");
     ret = p2.getRelativeWith(p1).toString();
     return Row(
         children: [
           const Background(),
-          // PolyDraggableContainer(),
-          ClippedContainer(
-            key:const Key("parent"),
-            onClickInsidePolygon: (){
-              if(ignoreEvent) {
-                print('在main中 父组件不检查区域内点击');
-              }
-            },
-            ignoreEvent: ignoreEvent,
-            backgroundColor: Colors.grey,
-            hoverColor: Colors.white,
-            containerSize: const Size(100, 100),
-            backgroundPolygon: Polygon([
-              PointEX(10, 5),
-              PointEX(100, 10),
-              PointEX(90, 100),
-              PointEX(0, 100),
-            ]
-            ),
-            child:
-            Positioned(
-              left: childOffset.dx,
-              top: childOffset.dy,
-              child:
-              ClippedContainer(
-                normalColor: Colors.red,
-                hoverColor: Colors.amber,
-                clickColor: Colors.purple,
-                key : const Key("child"),
-                onClickInsidePolygon: (){
-                  print('点在子组件区域内');
-                },
-                onHoverChange: (isHover){
-                  setState(() {
-                    ignoreEvent = isHover;
-                  });
-                },
-                backgroundColor: Colors.blue,
-                containerSize: const Size(20, 20),
-                backgroundPolygon: Polygon([
-                  PointEX(0, 0),
-                  PointEX(10, 0),
-                  PointEX(20, 20),
-                  PointEX(0, 20),
-                ]
-                ),
-                child: const Text("child"),
-              ),
-            ),
-          ),
+          PolyDraggableContainer(),
         ]
     );
   }
