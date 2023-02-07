@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:drag/widget.dart';
 import 'package:flutter/material.dart';
 
 class VectorDragging extends StatefulWidget {
@@ -35,9 +36,18 @@ class _VectorDraggingState extends State<VectorDragging> {
 
   @override
   Widget build(BuildContext context) {
+    // print(vector);
+    var bound = context.globalPaintBounds;
+    var vec = Vector2D(100, 0);
+    if(bound!= null)
+      {
+        vec = vec.transform(Matrix4.rotationZ(pi/2));
+        vec = vec.translate(Vector2D(bound.width / 2, bound.height / 2));
 
+        print(vec);
+        // vec.setLength(30);
+      }
 
-    print(vector);
 
     return Container(
       color: Colors.lightBlue,
@@ -47,6 +57,13 @@ class _VectorDraggingState extends State<VectorDragging> {
         Stack(
           alignment: Alignment.center,
           children: [
+            Align(
+              alignment: Alignment.center,
+              child: CustomPaint(
+                painter: MyPainter(vec),
+                size: Size(300, 300),
+              ),
+            ),
             Positioned(
               left: vector.x,
               top: vector.y,
@@ -88,12 +105,32 @@ class Vector2D {
   }
   @override
   String toString() {
-    return 'Vector2D{x: $x, y: $y}';
+    return 'Vector2D{x: ${x.toStringAsFixed(2)}, y: ${y.toStringAsFixed(2)}';
   }
 }
 
-test()
-{
-  Matrix4 matrix = Matrix4.identity();
-  matrix.rotateZ(0.5);
+// test()
+// {
+//   Matrix4 matrix = Matrix4.identity();
+//   matrix.rotateZ(0.5);
+// }
+
+class MyPainter extends CustomPainter{
+  Vector2D vector;
+  MyPainter(this.vector);
+  @override
+  void paint(Canvas canvas, Size size) {
+    var center = Offset(size.width / 2, size.height / 2);
+    Paint paint = Paint();
+    paint.color = Colors.red;
+    paint.strokeWidth = 2;
+    paint.style = PaintingStyle.stroke;
+    canvas.drawLine(center, Offset(vector.x, vector.y), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
+  }
+
 }
