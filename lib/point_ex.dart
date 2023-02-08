@@ -1,3 +1,5 @@
+import 'dart:math';
+
 class PointEX {
   PointEX(this.x,this.y);
   late double x;
@@ -8,6 +10,25 @@ class PointEX {
   @override
   String toString() {
     return "点(x:$x , y:$y)";
+  }
+
+  PointEX operator +(PointEX other){
+    return PointEX(x + other.x, y + other.y);
+  }
+  PointEX operator -(PointEX other){
+    return PointEX(x - other.x, y - other.y);
+  }
+  PointEX operator *(double value){
+    return PointEX(x * value, y * value);
+  }
+  PointEX operator /(double value){
+    return PointEX(x / value, y / value);
+  }
+  double CrossProduct(PointEX other){
+    return x * other.y - y * other.x;
+  }
+  double distanceTo(PointEX other){
+    return sqrt(pow(x - other.x, 2) + pow(y - other.y, 2));
   }
 }
 // 计算叉乘 |P0P1| × |P0P2|

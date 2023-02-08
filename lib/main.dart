@@ -8,6 +8,7 @@ import 'poly_draggable_container.dart';
 import 'polygon.dart';
 import 'polygon_helper.dart';
 import 'test3/index.dart';
+import 'test4/index.dart';
 
 void main() => runApp(const MyApp());
 
@@ -123,6 +124,7 @@ class _MainContainerState extends State<MainContainer> {
           const Background(),
           PolyDraggableContainer(),
           VectorDragging(),
+          Test4(),
         ]
     );
   }
