@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../lines/line_segment.dart';
 import '../points/point_ex.dart';
 import '../../utils.dart';
 
@@ -135,5 +136,17 @@ class Polygon{
     var path = Path();
     path.addPolygon(points.map((e) => Offset(e.x,e.y)).toList(), true);
     return path;
+  }
+
+  List<LineSegment> getLineSegments()
+  {
+    var list = <LineSegment>[];
+    for(var i=0;i<points.length;i++)
+    {
+      var p1 = points[i];
+      var p2 = points[(i+1)%points.length];
+      list.add(LineSegment(p1,p2));
+    }
+    return list;
   }
 }

@@ -9,6 +9,7 @@ import 'geometry/planes/polygon.dart';
 import 'geometry/planes/polygon_helper.dart';
 import 'test3/index.dart';
 import 'test4/index.dart';
+import 'test5/index.dart';
 
 void main() => runApp(const MyApp());
 
@@ -125,6 +126,7 @@ class _MainContainerState extends State<MainContainer> {
           PolyDraggableContainer(),
           VectorDragging(),
           Test4(),
+          Test5(),
         ]
     );
   }
