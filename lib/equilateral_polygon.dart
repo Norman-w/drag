@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'point_ex.dart';
-import 'polygon.dart';
+import 'geometry/points/point_ex.dart';
+import 'geometry/planes/polygon.dart';
 
 
 /// 使用边创建正多少边的形状

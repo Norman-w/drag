@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'clipped_container.dart';
 import 'logMonitor/index.dart';
-import 'point_ex.dart';
+import 'geometry/points/point_ex.dart';
 import 'background.dart';
 import 'poly_draggable_container.dart';
-import 'polygon.dart';
-import 'polygon_helper.dart';
+import 'geometry/planes/polygon.dart';
+import 'geometry/planes/polygon_helper.dart';
 import 'test3/index.dart';
 import 'test4/index.dart';
 

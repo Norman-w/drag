@@ -1,4 +1,4 @@
-import '../../point_ex.dart';
+import '../points/point_ex.dart';
 import 'line_segment.dart';
 
 class CrossInfo {

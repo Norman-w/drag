@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 
 import 'clipped_container.dart';
 import 'logMonitor/index.dart';
-import 'point_ex.dart';
-import 'polygon.dart';
+import 'geometry/points/point_ex.dart';
+import 'geometry/planes/polygon.dart';
 
 class PolyDraggableContainer extends StatefulWidget {
   PolyDraggableContainer({

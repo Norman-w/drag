@@ -1,9 +1,9 @@
 import 'package:drag/widget.dart';
 import 'package:flutter/material.dart';
 
-import 'point_ex.dart';
-import 'polygon.dart';
-import 'polygon_helper.dart';
+import 'geometry/points/point_ex.dart';
+import 'geometry/planes/polygon.dart';
+import 'geometry/planes/polygon_helper.dart';
 
 class DraggableContainer extends StatefulWidget {
   const DraggableContainer({Key? key}) : super(key: key);

@@ -4,13 +4,12 @@ import 'package:drag/widget.dart';
 import 'package:flutter/material.dart';
 
 import '../clipped_container.dart';
-import '../point_ex.dart';
-import '../polygon.dart';
+import '../geometry/lines/cross_info.dart';
+import '../geometry/lines/line_segment.dart';
+import '../geometry/points/point_ex.dart';
+import '../geometry/planes/polygon.dart';
 import 'custom_painters.dart';
-import 'lines/cross_info.dart';
-import 'lines/line_segment.dart';
-import 'lines/ray.dart';
-import 'vector2d.dart';
+import '../geometry/vectors/vector2d.dart';
 
 class Test4 extends StatefulWidget {
   const Test4({super.key});

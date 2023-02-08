@@ -1,5 +1,5 @@
-import '../../point_ex.dart';
-import '../vector2d.dart';
+import '../points/point_ex.dart';
+import '../vectors/vector2d.dart';
 
 class StraightLine{
   PointEX point1;

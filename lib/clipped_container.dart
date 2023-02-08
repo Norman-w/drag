@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'logMonitor/index.dart';
 import 'path_clipper.dart';
-import 'polygon.dart';
-import 'polygon_helper.dart';
+import 'geometry/planes/polygon.dart';
+import 'geometry/planes/polygon_helper.dart';
 
 class ClippedContainer extends StatelessWidget {
   final Size containerSize;

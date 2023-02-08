@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
 
-import '../point_ex.dart';
-import '../polygon.dart';
-import 'vector2d.dart';
+import '../geometry/points/point_ex.dart';
+import '../geometry/planes/polygon.dart';
+import '../geometry/vectors/vector2d.dart';
 
 class MyPainter extends CustomPainter {
   Offset? mouseDownPosition;

@@ -16,8 +16,8 @@
 import 'dart:ui';
 import 'dart:math';
 
-import 'point_ex.dart';
-import 'equilateral_polygon.dart';
+import '../points/point_ex.dart';
+import '../../equilateral_polygon.dart';
 import 'polygon.dart';
 
 ///两个图形之间的包含关系.

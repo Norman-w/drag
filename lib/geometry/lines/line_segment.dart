@@ -1,9 +1,13 @@
-import '../../point_ex.dart';
+import 'dart:math';
+
+import '../points/point_ex.dart';
+import '../../utils.dart';
 import 'ray.dart';
 import 'straight_line.dart';
-import '../vector2d.dart';
+import '../vectors/vector2d.dart';
 
 
+var ESP = 1e-5;
 
 
 class LineSegment{
@@ -91,3 +95,24 @@ class LineSegment{
   }
 }
 
+
+extension LineSegmentMethods on LineSegment{
+  // 判断线段是否包含点point
+  bool  isOnLine(PointEX point, LineSegment line)
+  {
+    return( ( fabs(pointMultiply(line.start, line.end, point)) < ESP ) &&
+        ( ( point.x - line.start.x ) * ( point.x - line.end.x ) <= 0 ) &&
+        ( ( point.y - line.start.y ) * ( point.y - line.end.y ) <= 0 ) );
+  }
+  // 判断线段相交 老方法
+  bool intersect(LineSegment L1, LineSegment L2)
+  {
+    return( (max(L1.start.x, L1.end.x) >= min(L2.start.x, L2.end.x)) &&
+        (max(L2.start.x, L2.end.x) >= min(L1.start.x, L1.end.x)) &&
+        (max(L1.start.y, L1.end.y) >= min(L2.start.y, L2.end.y)) &&
+        (max(L2.start.y, L2.end.y) >= min(L1.start.y, L1.end.y)) &&
+        (pointMultiply(L2.start, L1.end, L1.start) * pointMultiply(L1.end, L2.end, L1.start) >= 0) &&
+        (pointMultiply(L1.start, L2.end, L2.start) * pointMultiply(L2.end, L1.end, L2.start) >= 0)
+    );
+  }
+}
